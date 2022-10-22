@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import User from '../models/user';
+import user from '../models/user';
 
 
 export const getUsers = async( req:Request, res: Response ) => {
@@ -18,12 +19,19 @@ export const getUser = async ( req:Request, res: Response ) => {
     res.json({ user })
 }
 
-export const postUser = ( req:Request, res: Response ) => {
+export const postUser = async ( req:Request, res: Response ) => {
     const { body } = req;
-    res.json({
-        msg: 'postUser',
-        body
-    })
+    try {
+        const user = new User(body);
+        await user.save();
+        res.json( user )
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            msg: `Talk with the administrator`
+        })
+        
+    }
 }
 
 export const putUser = ( req:Request, res: Response ) => {
