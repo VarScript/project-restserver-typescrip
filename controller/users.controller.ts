@@ -63,11 +63,16 @@ export const putUser = async ( req:Request, res: Response ) => {
     }
 }
 
-export const deletUser = ( req:Request, res: Response ) => {
+export const deletUser = async ( req:Request, res: Response ) => {
     const { id } = req.params;
-    res.json({
-        msg: 'deletUser',
-        id
-    })
+    const user = await User.findByPk( id );
+    if ( !user ) {
+        return res.status(404).json({
+            msg: `The user with the id ${id} is not exist`
+        })
+    }
+    await user.update({ status:false })
+    // await user.destroy();
+    res.json(user)
 }
 
