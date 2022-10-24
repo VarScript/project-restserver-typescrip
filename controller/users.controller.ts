@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import User from '../models/user';
-import user from '../models/user';
 
 
 export const getUsers = async( req:Request, res: Response ) => {
@@ -11,22 +10,31 @@ export const getUsers = async( req:Request, res: Response ) => {
 export const getUser = async ( req:Request, res: Response ) => {
     const { id } = req.params;
     const user = await User.findByPk( id );
-    if (!user){
+    user ?
+        res.json({ user }) :
         res.status(404).json({
             msg: `The user by the Id ${id} is not exist`
         })
-    }
-    res.json({ user })
 }
 
 export const postUser = async ( req:Request, res: Response ) => {
     const { body } = req;
     try {
-        const user = new User(body);
+        const existEmail = await User.findOne({
+            where: {
+                email: body.email
+            }
+        })
+        if (existEmail) {
+            return res.status(404).json({
+                msg: `The Email ${body.email} it already exist`
+            })
+        }
+        const user =  User.build( body );
         await user.save();
         res.json( user )
     } catch (error) {
-        console.error(error);
+        console.log(error);
         res.status(500).json({
             msg: `Talk with the administrator`
         })
@@ -34,14 +42,25 @@ export const postUser = async ( req:Request, res: Response ) => {
     }
 }
 
-export const putUser = ( req:Request, res: Response ) => {
+export const putUser = async ( req:Request, res: Response ) => {
     const { id } = req.params;
     const { body } = req;
-    res.json({
-        msg: 'putUser',
-        body,
-        id
-    })
+    try {
+        const user = await User.findByPk( id );
+        if ( !user ) {
+            return res.status(404).json({
+                msg: `The user with the id ${id} is not exist`
+            })
+        }
+        await user.update( body );
+        res.json( user );
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            msg: `Talk with the administrator`
+        })
+        
+    }
 }
 
 export const deletUser = ( req:Request, res: Response ) => {
